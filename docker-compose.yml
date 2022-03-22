@@ -1,0 +1,71 @@
+version : '3'
+
+services:
+    webserver:
+        build :
+            context : ./docker
+            dockerfile : Dockerfile 
+        container_name : php_zfdos
+        ports:
+            - "9180:80"
+        networks:
+            backend-net:
+                ipv4_address: 8.15.35.10
+        links:
+            - mongodb
+            - database
+            - memcached
+        depends_on :
+            - mongodb
+            - database
+            - memcached
+        volumes:
+            - .:/var/www/html
+            - "./docker/timezone.ini:/usr/local/etc/php/conf.d/timezone.ini"
+            - "/etc/timezone:/etc/timezone:ro"
+            - "/etc/localtime:/etc/localtime:ro"
+            # "./docker/php.ini:/usr/local/etc/php/conf.d/php.ini"
+        command: sh /var/www/html/docker/init.sh
+
+    database:
+        container_name : database_zfdos
+        image: mariadb
+        ports:
+            - "9106:3306"
+        environment:
+            - MYSQL_ROOT_PASSWORD=7*Zfdos369
+            - MYSQL_DATABASE=db_zfdos
+        networks:
+            backend-net:
+                ipv4_address: 8.15.35.11
+
+    memcached:
+        container_name : memcached_zfdos
+        image: memcached:alpine
+        ports:
+            - "9111:11211"
+        networks:
+            backend-net:
+                ipv4_address: 8.15.35.12
+
+    mongodb:
+        container_name : mongodb_zfdos
+        image: bitnami/mongodb:latest
+        ports:
+            - 9117:27017
+        networks:
+            backend-net:
+                ipv4_address: 8.15.35.13
+        environment:
+            - MONGODB_ROOT_PASSWORD=toor
+            - MONGODB_USERNAME=mdb_user_zfdos
+            - MONGODB_PASSWORD=7*Zfdos369
+            - MONGODB_DATABASE=mdb_zfdos
+        
+networks:
+    backend-net:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 8.15.35.0/26
